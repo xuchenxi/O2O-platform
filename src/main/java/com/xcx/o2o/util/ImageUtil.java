@@ -2,12 +2,15 @@ package com.xcx.o2o.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
+
+import org.slf4j.Logger;
+
+import com.xcx.o2o.dto.ImageHolder;
 
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.geometry.Positions;
@@ -16,14 +19,14 @@ public class ImageUtil {
 	private static String basePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
 	private static final SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 	private static final Random r = new Random();
-	public static String generateThumbnail(InputStream thumbnailInputStream,String fileName ,String targetAddr) {
+	public static String generateThumbnail(ImageHolder thumbnail,String targetAddr) {
 		String realFileName = getRandomFileName();
-		String extension = getFileExtension(fileName);
+		String extension = getFileExtension(thumbnail.getImageName());
 		makeDirpath(targetAddr);
 		String relativeAddr = targetAddr +realFileName +extension;
 		File dest = new File(PathUtil.getImgbasePath()+relativeAddr);
 		try {
-			Thumbnails.of(thumbnailInputStream).size(200, 200).watermark(Positions.BOTTOM_RIGHT,ImageIO.read(new File(basePath+ "/watermark.jpg")),0.25f).outputQuality(0.8f).toFile(dest);
+			Thumbnails.of(thumbnail.getImage()).size(200, 200).watermark(Positions.BOTTOM_RIGHT,ImageIO.read(new File(basePath+ "/watermark.jpg")),0.25f).outputQuality(0.8f).toFile(dest);
 			
 		}catch (IOException e) {
 			e.printStackTrace();
@@ -65,5 +68,28 @@ public class ImageUtil {
 			}
 			fileOrPath.delete();
 		}
+	}
+	public static String generateNormalImg(ImageHolder thumbnail, String targetAddr) {
+		// TODO Auto-generated method stub
+		//获取随机名
+		String realFileName = getRandomFileName();
+		//获取扩展名
+		String extension = getFileExtension(thumbnail.getImageName());
+		//如果不存在自动创建
+		makeDirpath(targetAddr);
+		//获取文件存储的相对路径(带文件名)
+		String relativeAddr = targetAddr +realFileName +extension;
+		//获取文件要保存到的目标路径
+		File dest = new File(PathUtil.getImgbasePath()+relativeAddr);
+		try {
+			Thumbnails.of(thumbnail.getImage()).size(337, 640).watermark(Positions.BOTTOM_RIGHT,ImageIO.read(new File(basePath+ "/watermark.jpg")),0.25f).outputQuality(0.8f).toFile(dest);
+			
+		}catch (IOException e) {
+			e.printStackTrace();
+			// TODO: handle exception
+			throw new RuntimeException("创建详情图失败"+extension.toString());
+		}
+		return relativeAddr;
+	
 	}
 }

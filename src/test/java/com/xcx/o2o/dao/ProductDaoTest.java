@@ -23,7 +23,6 @@ public class ProductDaoTest extends BaseTest {
 	private ProductDao productDao;
 	@Autowired
 	private ProductImgDao productImgDao;
-
 	@Test
 	public void testAInsertProduct() throws Exception {
 		Shop shop1 = new Shop();
@@ -73,6 +72,7 @@ public class ProductDaoTest extends BaseTest {
 		effectedNum = productDao.insertProduct(product3);
 		assertEquals(1, effectedNum);
 	}
+
 	@Test
 	public void testBQueryProductList() throws Exception {
 		Product product = new Product();
@@ -119,5 +119,23 @@ public class ProductDaoTest extends BaseTest {
 		effectedNum = productImgDao.deleteProductImgByProductId(productId);
 		assertEquals(2, effectedNum);
 	}
+
+	@Test
+	public void testDUpdateProduct() throws Exception {
+		Product product = new Product();
+		Shop shop = new Shop();
+		shop.setShopId(1L);
+		product.setProductId(1L);
+		product.setShop(shop);
+		product.setProductName("第一个产品");
+		int effectedNum = productDao.updateProduct(product);
+		assertEquals(1, effectedNum);
+	}
 	
+
+	@Test
+	public void testEDeleteShopAuthMap() throws Exception {
+		int effectedNum = productDao.deleteProduct(2, 1);
+		assertEquals(1, effectedNum);
+	}
 }
