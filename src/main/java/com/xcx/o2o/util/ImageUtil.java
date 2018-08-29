@@ -5,13 +5,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
-
 import javax.imageio.ImageIO;
-
-import org.slf4j.Logger;
-
 import com.xcx.o2o.dto.ImageHolder;
-
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.geometry.Positions;
 
