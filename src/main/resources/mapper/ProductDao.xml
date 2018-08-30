@@ -92,7 +92,40 @@
 		priority DESC
 		LIMIT #{rowIndex},#{pageSize};
 	</select>
-
+	<select id="queryProductById" resultMap="productMap" parameterType="Long">
+		<!-- 具体的sql -->
+		SELECT
+		p.product_id,
+		p.product_name,
+		p.product_desc,
+		p.img_addr,
+		p.normal_price,
+		p.promotion_price,
+		p.priority,
+		p.create_time,
+		p.last_edit_time,
+		p.enable_status,
+		p.product_category_id,
+		p.shop_id,
+		pm.product_img_id,
+		pm.img_addr AS detail_img,
+		pm.img_desc,
+		pm.priority,
+		pm.create_time
+		FROM
+		tb_product p
+		LEFT JOIN
+		tb_product_img pm
+		ON
+		p.product_id =
+		pm.product_id
+		WHERE
+		p.product_id =
+		#{productId}
+		ORDER BY
+		pm.priority DESC
+		
+	</select>
 	<select id="queryProductCount" resultType="int">
 		SELECT count(1) FROM tb_product
 		<where>

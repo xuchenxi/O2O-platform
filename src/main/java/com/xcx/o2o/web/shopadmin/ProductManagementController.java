@@ -8,11 +8,11 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartHttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
@@ -50,14 +50,14 @@ public class ProductManagementController {
 		ObjectMapper mapper = new ObjectMapper();
 		Product product = null;
 		String productStr = HttpServletRequestUtil.getString(request, "productStr");
-		MockMultipartHttpServletRequest multipartRequest = null;
+		MultipartHttpServletRequest multipartRequest = null;
 		ImageHolder thumbnail = null;
 		List<ImageHolder> productImgList = new ArrayList<ImageHolder>();
 		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(request.getSession().getServletContext());
 		try {
 			//若请求中存在文件流,则取出相关文件(缩略图与详情图)
 			if (multipartResolver.isMultipart(request)) {
-				multipartRequest = (MockMultipartHttpServletRequest) request;
+				multipartRequest = (MultipartHttpServletRequest) request;
 				//取出缩略图并构建ImageHolder对象
 				CommonsMultipartFile thumbnailFile = (CommonsMultipartFile) multipartRequest.getFile("thumbnail");
 				thumbnail = new ImageHolder(thumbnailFile.getOriginalFilename(), thumbnailFile.getInputStream());
@@ -98,9 +98,7 @@ public class ProductManagementController {
 			try {
 				//从session中获取当前店铺Id并赋值给product,减少对前端数据的依赖
 				Shop currentShop = (Shop) request.getSession().getAttribute("currentShop");
-				Shop shop = new Shop();
-				shop.setShopId(currentShop.getShopId());
-				product.setShop(shop);
+				product.setShop(currentShop);
 				//执行添加操作
 				ProductExecution pe = productService.addProduct(product, thumbnail, productImgList);
 				if (pe.getState() == ProductStateEnum.SUCCESS.getState()) {

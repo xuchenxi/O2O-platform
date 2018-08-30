@@ -30,7 +30,7 @@ public class ProductDaoTest extends BaseTest {
 		Shop shop2 = new Shop();
 		shop2.setShopId(2L);
 		ProductCategory pc1 = new ProductCategory();
-		pc1.setProductCategoryId(2L);
+		pc1.setProductCategoryId(3L);
 		ProductCategory pc2 = new ProductCategory();
 		pc2.setProductCategoryId(3L);
 		ProductCategory pc3 = new ProductCategory();
@@ -80,7 +80,7 @@ public class ProductDaoTest extends BaseTest {
 		System.out.println(productList.size());
 		assertEquals(3, productList.size());
 		int count = productDao.queryProductCount(product);
-		assertEquals(4, count);
+		assertEquals(5, count);
 		product.setProductName("测试");
 		productList = productDao.queryProductList(product, 0, 3);
 		assertEquals(3, productList.size());
@@ -134,8 +134,8 @@ public class ProductDaoTest extends BaseTest {
 	
 
 	@Test
-	public void testEDeleteShopAuthMap() throws Exception {
-		int effectedNum = productDao.deleteProduct(2, 1);
+	public void testEUpdateProductCategoryToNull() throws Exception {
+		int effectedNum = productDao.updateProductCategoryToNull(2L);
 		assertEquals(1, effectedNum);
 	}
 }
