@@ -115,7 +115,7 @@ public class ProductServiceImpl implements ProductService {
 	//若商品详情图列表参数有值,对商品详情图片列表进行同样的操作
 	//将tb_product_img下面的该商品原先的商品详情图记录全部清除
 	//更新tb_product的信息
-	public ProductExecution modifyProduct(Product product, ImageHolder thumbnail, List<ImageHolder> productImgs)
+	public ProductExecution modifyProduct(Product product, ImageHolder thumbnail, List<ImageHolder> productImgHolderList)
 			throws ProductOperationException {
 		// TODO 自动生成的方法存根
 		if(product != null && product.getShop() != null && product.getShop().getShopId() != null) {
@@ -130,12 +130,37 @@ public class ProductServiceImpl implements ProductService {
 				}
 				addThunbnail(product, thumbnail);
 			}
-			if ( != null && productImgs.size() > 0) {
-				deleteProductImgs(product.getProductId());
-				addProductImgs(product, productImgs);
+			//如果有新存入商品详情图,则将原先的删除,并添加新的图片
+			if (productImgHolderList != null && productImgHolderList.size() > 0) {
+				deleteProductImgList(product.getProductId());
+				addProductImgList(product, productImgHolderList);
 			}
+			try {
+				//更新商品信息
+				int effectedNum = productDao.updateProduct(product);
+				if (effectedNum <= 0) {
+					throw new ProductOperationException("更新商品信息失败");
+				}
+				return new ProductExecution(ProductStateEnum.SUCCESS,product);
+			} catch (Exception e) {
+				// TODO: handle exception
+				throw new ProductOperationException("更新商品信息失败"+e.toString());
+			}
+		}else {
+			return new ProductExecution(ProductStateEnum.EMPTY);
 		}
-		return null;
+	}
+	private void deleteProductImgList(Long productId) {
+		// TODO 自动生成的方法存根
+		//根据productId获取原来的图片
+		List<ProductImg> productImgList = productImgDao.queryProductImgList(productId);
+		//干掉原来的图片
+		for (ProductImg productImg : productImgList) {
+			ImageUtil.deleteFileOrPath(productImg.getImgAddr());
+			
+		}
+		//删除数据库里原有图片的信息
+		productImgDao.deleteProductImgByProductId(productId);
 	}
 	@Override
 	public ProductExecution getProductList(Product productCondition, int pageIndex, int pageSize) {
