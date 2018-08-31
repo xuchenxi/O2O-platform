@@ -108,5 +108,44 @@ public class ProductServiceImpl implements ProductService {
 
 		}
 	}
+	@Override
+	@Transactional
+	//若缩略图参数有值,则处理缩略图,
+	//若原先存在缩略图则先删除再添加新图,之后获取缩略图相对路径并赋值给product
+	//若商品详情图列表参数有值,对商品详情图片列表进行同样的操作
+	//将tb_product_img下面的该商品原先的商品详情图记录全部清除
+	//更新tb_product的信息
+	public ProductExecution modifyProduct(Product product, ImageHolder thumbnail, List<ImageHolder> productImgs)
+			throws ProductOperationException {
+		// TODO 自动生成的方法存根
+		if(product != null && product.getShop() != null && product.getShop().getShopId() != null) {
+			//给商品设置上默认属性
+			product.setLastEditTime(new Date());
+			//若商品缩略图不为空且原有缩略图不为空则删除原有缩略图并添加
+			if (thumbnail != null) {
+				// 先获取一遍原有信息,因为原来的信息里有原图片地址
+				Product tempProduct = productDao.queryProductByProductId(product.getProductId());
+				if (tempProduct.getImgAddr() != null) {
+					ImageUtil.deleteFileOrPath(tempProduct.getImgAddr());
+				}
+				addThunbnail(product, thumbnail);
+			}
+			if ( != null && productImgs.size() > 0) {
+				deleteProductImgs(product.getProductId());
+				addProductImgs(product, productImgs);
+			}
+		}
+		return null;
+	}
+	@Override
+	public ProductExecution getProductList(Product productCondition, int pageIndex, int pageSize) {
+		// TODO 自动生成的方法存根
+		return null;
+	}
+	@Override
+	public Product getProductById(long productId) {
+		// TODO 自动生成的方法存根
+		return productDao.queryProductById(productId);
+	}
 	
 }
