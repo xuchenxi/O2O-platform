@@ -21,9 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xcx.o2o.dto.ImageHolder;
 import com.xcx.o2o.dto.ProductExecution;
 import com.xcx.o2o.entity.Product;
+import com.xcx.o2o.entity.ProductCategory;
 import com.xcx.o2o.entity.Shop;
 import com.xcx.o2o.enums.ProductStateEnum;
 import com.xcx.o2o.exceptions.ProductCategoryOperationException;
+import com.xcx.o2o.service.ProductCategoryService;
 import com.xcx.o2o.service.ProductService;
 import com.xcx.o2o.util.CodeUtil;
 import com.xcx.o2o.util.HttpServletRequestUtil;
@@ -33,7 +35,8 @@ import com.xcx.o2o.util.HttpServletRequestUtil;
 public class ProductManagementController {
 	@Autowired
 	private ProductService productService;
-
+	@Autowired
+	private ProductCategoryService productCategoryService;
 	// 支持上传商品详情图的最大数量
 	private static final int IMAGEMAXCOUNT = 6;
 
@@ -131,9 +134,51 @@ public class ProductManagementController {
 	 */
 	@RequestMapping(value = "/getproductbyid", method = RequestMethod.GET)
 	@ResponseBody
-	private Map<String, Object> getProductById(@RequestParam Long productId) {
+	private Map<String, Object> getProductById(@RequestParam("productId") Long productId) {
 		Map<String, Object> modelMap = new HashMap<String, Object>();
+		// 非空判断
+		if (productId > -1) {
+			// 获取商品信息
+			Product product = productService.getProductById(productId);
+			// 获取该店铺下的商品类别列表
+			List<ProductCategory> productCategoryList = productCategoryService
+					.getProductCategoryList(product.getShop().getShopId());
+			modelMap.put("product", product);
+			modelMap.put("productCategryList", productCategoryList);
+			modelMap.put("success", true);
+		} else {
+			modelMap.put("success", false);
+			modelMap.put("errMsg", "empty productId");
+		}
+		return modelMap;
+	}
 
+	@RequestMapping(value = "/modifyproduct", method = RequestMethod.POST)
+	@ResponseBody
+	private Map<String, Object> modifyProduct(HttpServletRequest request) {
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		// 是商品编辑时候调用还是上下架操作的时候调用
+		// 若为前者则进行验证码判断,后者跳过验证码判断
+		boolean statusChange = HttpServletRequestUtil.getBoolean(request, "statusChange");
+		// 验证码判断
+		if (!statusChange && !CodeUtil.checkVerifyCode(request)) {
+			modelMap.put("success", false);
+			modelMap.put("errMsg", "输入了错误的验证码");
+			return modelMap;
+		}
+		// 接收前端参数的变量的初始化,包括商品,缩略图,详情图列表实体类
+		ObjectMapper mapper = new ObjectMapper();
+		Product product = null;
+		ImageHolder thumbnail = null;
+		List<ImageHolder> productImgList = new ArrayList<ImageHolder>();
+		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(
+				request.getSession().getServletContext());
+		// 若请求中存在文件流,则取出相关的文件(包括缩略图和详情图)
+		try {
+
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 		return modelMap;
 	}
 }
