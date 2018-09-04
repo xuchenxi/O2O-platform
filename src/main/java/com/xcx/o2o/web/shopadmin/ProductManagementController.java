@@ -1,5 +1,6 @@
 package com.xcx.o2o.web.shopadmin;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -144,7 +145,7 @@ public class ProductManagementController {
 			List<ProductCategory> productCategoryList = productCategoryService
 					.getProductCategoryList(product.getShop().getShopId());
 			modelMap.put("product", product);
-			modelMap.put("productCategryList", productCategoryList);
+			modelMap.put("productCategoryList", productCategoryList);
 			modelMap.put("success", true);
 		} else {
 			modelMap.put("success", false);
@@ -175,10 +176,78 @@ public class ProductManagementController {
 				request.getSession().getServletContext());
 		// 若请求中存在文件流,则取出相关的文件(包括缩略图和详情图)
 		try {
-
+			if (multipartResolver.isMultipart(request)) {
+				thumbnail = handleImage(request, thumbnail, productImgList);
+			} else {
+				modelMap.put("success", false);
+				modelMap.put("errMsg", "上传图片不能为空");
+				return modelMap;
+			}
 		} catch (Exception e) {
 			// TODO: handle exception
+			modelMap.put("success", false);
+			modelMap.put("errMsg", e.toString());
+			return modelMap;
+
+		}
+		try {
+			String productStr = HttpServletRequestUtil.getString(request, "productStr");
+			product = mapper.readValue(productStr, Product.class);
+		} catch (Exception e) {
+			// TODO: handle exception
+			modelMap.put("success", false);
+			modelMap.put("errMsg", e.toString());
+			return modelMap;
+		}
+		if (product != null) {
+			try {
+				// 从session中获取当前店铺的Id并赋值给product,减少对前端数据的依赖
+				Shop currentShop = (Shop) request.getSession().getAttribute("currentShop");
+				product.setShop(currentShop);
+				// 进行商品信息变更操作
+				ProductExecution pe = productService.modifyProduct(product, thumbnail, productImgList);
+				if (pe.getState() == ProductStateEnum.SUCCESS.getState()) {
+					modelMap.put("success", true);
+				} else {
+					modelMap.put("success", false);
+					modelMap.put("errMsg", pe.getStateInfo());
+				}
+			} catch (RuntimeException e) {
+				// TODO: handle exception
+				modelMap.put("success", false);
+				modelMap.put("errMsg", e.toString());
+				return modelMap;
+			}
+		} else {
+			modelMap.put("success", false);
+			modelMap.put("errMsg", "请输入商品信息");
+
 		}
 		return modelMap;
+	}
+
+	private ImageHolder handleImage(HttpServletRequest request, ImageHolder thumbnail, List<ImageHolder> productImgList)
+			throws IOException {
+		MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+		// 取出缩略图并构建ImageHolder对象
+		CommonsMultipartFile thumbnailFile = (CommonsMultipartFile) multipartRequest.getFile("thumbnail");
+		if (thumbnailFile != null) {
+
+			thumbnail = new ImageHolder(thumbnailFile.getOriginalFilename(), thumbnailFile.getInputStream());
+		}
+		// 取出详情图列表并构建List<ImageHolder>列表对象,最多支持六张图片上传
+		for (int i = 0; i < IMAGEMAXCOUNT; i++) {
+			CommonsMultipartFile productImgFile = (CommonsMultipartFile) multipartRequest.getFile("productImg" + i);
+			if (productImgFile != null) {
+				// 若取出的第i个详情图片文件流不为空,则将其加入详情列表
+				ImageHolder productImg = new ImageHolder(productImgFile.getOriginalFilename(),
+						productImgFile.getInputStream());
+				productImgList.add(productImg);
+			} else {
+				// 若取出的第i个详情图片文件流为空,则终止循环
+				break;
+			}
+		}
+		return thumbnail;
 	}
 }
