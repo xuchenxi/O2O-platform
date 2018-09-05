@@ -51,7 +51,7 @@
 			<result column="product_id" property="productId" />
 		</collection>
 	</resultMap>
-	<select id="queryProductList" resultMap="productMap">
+	<select id="queryProductList" resultType="com.xcx.o2o.entity.Product">
 		SELECT
 		product_id,
 		product_name,
