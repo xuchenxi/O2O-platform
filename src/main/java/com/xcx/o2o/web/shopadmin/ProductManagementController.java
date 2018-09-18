@@ -178,10 +178,6 @@ public class ProductManagementController {
 		try {
 			if (multipartResolver.isMultipart(request)) {
 				thumbnail = handleImage(request, thumbnail, productImgList);
-			} else {
-				modelMap.put("success", false);
-				modelMap.put("errMsg", "上传图片不能为空");
-				return modelMap;
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -224,6 +220,61 @@ public class ProductManagementController {
 
 		}
 		return modelMap;
+	}
+
+	@RequestMapping(value = "/getproductlistbyshop", method = RequestMethod.GET)
+	@ResponseBody
+	private Map<String, Object> getProductListByShop(HttpServletRequest request) {
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		// 获取前台传过来的页码
+		int pageIndex = HttpServletRequestUtil.getInt(request, "pageIndex");
+		// 获取前台传过来的每页要求返回的商品数上线
+		int pageSize = HttpServletRequestUtil.getInt(request, "pageSize");
+		// 从当前session中获取店铺信息,主要是获取shopId
+		Shop currentShop = (Shop) request.getSession().getAttribute("currentShop");
+		// 空值判断
+		if ((pageIndex > -1) && (pageSize > -1) && (currentShop != null) && (currentShop.getShopId() != null)) {
+			// 获取传入的需要检索的条件，包括是否需要从某个商品类别以及模糊查找商品名去筛选某个店铺下的商品列表
+			// 筛选的条件可以进行排列组合
+			long productCategoryId = HttpServletRequestUtil.getLong(request, "productCategoryId");
+			String productName = HttpServletRequestUtil.getString(request, "prductName");
+			Product productCondition = compactProductCondition(currentShop.getShopId(), productCategoryId, productName);
+			// 传入查询条件以及分页信息进行查询，返回相应商品列表以及总数
+			ProductExecution pe = productService.getProductList(productCondition, pageIndex, pageSize);
+			modelMap.put("productList", pe.getProductList());
+			modelMap.put("count", pe.getCount());
+			modelMap.put("success", true);
+		} else {
+			modelMap.put("success", false);
+			modelMap.put("errMsg", "empty pageSize or pageIndex or shopId");
+		}
+		return modelMap;
+
+	}
+
+	private Product compactProductCondition(Long shopId, long productCategoryId, String productName) {
+		// TODO 自动生成的方法存根
+		Product productCondition = new Product();
+		Shop shop = new Shop();
+		shop.setShopId(shopId);
+		productCondition.setShop(shop);
+		// 若有指定类别的要求则添加进去
+		if (productCategoryId != -1L) {
+			ProductCategory productCategory = new ProductCategory();
+			productCategory.setProductCategoryId(productCategoryId);
+			productCondition.setProductCategory(productCategory);
+		}
+		// 若有商品名模糊查询的要求则添加进去
+		if (productCategoryId != -1L) {
+			ProductCategory productCategory = new ProductCategory();
+			productCategory.setProductCategoryId(productCategoryId);
+			productCondition.setProductCategory(productCategory);
+		}
+		// 若有商品名模糊查询的要求则添加进去
+		if (productName != null) {
+			productCondition.setProductName(productName);
+		}
+		return productCondition;
 	}
 
 	private ImageHolder handleImage(HttpServletRequest request, ImageHolder thumbnail, List<ImageHolder> productImgList)
