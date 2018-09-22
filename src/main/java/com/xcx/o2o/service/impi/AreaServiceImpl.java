@@ -9,7 +9,7 @@ import com.xcx.o2o.dao.AreaDao;
 import com.xcx.o2o.entity.Area;
 import com.xcx.o2o.service.AreaService;
 @Service
-public class AreaServiceImol implements AreaService {
+public class AreaServiceImpl implements AreaService {
 	@Autowired
 	private AreaDao areaDao;
 	@Override
